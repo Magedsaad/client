@@ -12,7 +12,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -45,6 +47,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.trying.developing.client.model.Order;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,6 +65,7 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
     private static final float DEFAULT_ZOOM = 15f;
     private static final String TAG = "MapsActivity";
     private ImageView mGps;
+    private EditText mSearchText;
     List<Address> addresses;
     private DatabaseReference databaseReference;
     FirebaseDatabase database;
@@ -78,6 +83,23 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
         geocoder = new Geocoder(this, Locale.getDefault());
 
         mGps = (ImageView) findViewById(R.id.ic_gps);
+        mSearchText=(EditText) findViewById(R.id.input_search);
+        mSearchText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                geoLocate(mSearchText.getText().toString());
+            }
+        });
 
         database = FirebaseDatabase.getInstance();
         databaseReference = database.getReference("order");
@@ -86,16 +108,6 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
 
     }
 
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -160,8 +172,11 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
                             TextView size=(TextView) view.findViewById(R.id.size);
 
 
+
                             title.setText("Order");
                             size.setText(marker.getSnippet());
+
+
 
 
 
@@ -222,21 +237,21 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
 
     private void init() {
         Log.d("init", "init: initializing");
-//        mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//            @Override
-//            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-//                if (actionId == EditorInfo.IME_ACTION_SEARCH
-//                        || actionId == EditorInfo.IME_ACTION_DONE
-//                        || keyEvent.getAction() == KeyEvent.ACTION_DOWN
-//                        || keyEvent.getAction() == KeyEvent.KEYCODE_ENTER) {
-//
-//                    //execute our method for searching
-//                    geoLocate();
-//                }
-//
-//                return false;
-//            }
-//        });
+        mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH
+                        || actionId == EditorInfo.IME_ACTION_DONE
+                        || keyEvent.getAction() == KeyEvent.ACTION_DOWN
+                        || keyEvent.getAction() == KeyEvent.KEYCODE_ENTER) {
+
+                    //execute our method for searching
+                  //  geoLocate();
+                }
+
+                return false;
+            }
+        });
 
         mGps.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -301,6 +316,32 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
         }
     }
 
+
+
+    private void geoLocate(String search) {
+        Log.d(TAG, "geoLocate: geolocating");
+
+        String searchString = search;
+
+        Geocoder geocoder = new Geocoder(MapsActivity.this);
+        List<Address> list = new ArrayList<>();
+        try {
+            list = geocoder.getFromLocationName(searchString, 1);
+        } catch (IOException e) {
+            Log.e(TAG, "geoLocate: IOException: " + e.getMessage());
+        }
+
+        if (list.size() > 0) {
+            Address address = list.get(0);
+
+            Log.d(TAG, "geoLocate: found a location: " + address.toString());
+            //Toast.makeText(this, address.toString(), Toast.LENGTH_SHORT).show();
+
+            moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM,
+                    address.getAddressLine(0));
+        }
+    }
+
     private void getDeviceLocation() {
 
         Log.d("current location", "getDeviceLocation: getting the devices current location");
@@ -355,7 +396,7 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
 
                 }else {
 
-                databaseReference.push().setValue(new Order(lat,lng,details.getText().toString(),address));
+                databaseReference.push().setValue(new Order(lat,lng,details.getText().toString(),address,"pending"));
                 mMap.addMarker(new MarkerOptions().position(latLng).title("Order").snippet(details.getText().toString()));
 
                 dialog.dismiss();
@@ -365,11 +406,8 @@ public class MapsActivity extends FragmentActivity  implements OnMapReadyCallbac
 
             }
         });
-
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
-
-
     }
 
 }

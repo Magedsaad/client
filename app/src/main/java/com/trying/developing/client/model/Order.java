@@ -10,12 +10,15 @@ public class Order {
     public Double lng;
     public String details;
     public String address;
+    public String status;
 
-    public Order(Double lat, Double lng, String details, String address) {
+
+    public Order(Double lat, Double lng, String details, String address, String status) {
         this.lat = lat;
         this.lng = lng;
         this.details = details;
         this.address = address;
+        this.status = status;
     }
 
     public Order() {
@@ -35,5 +38,9 @@ public class Order {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

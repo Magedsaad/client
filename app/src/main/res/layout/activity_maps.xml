@@ -28,15 +28,17 @@
             android:layout_marginLeft="10dp"
             android:src="@drawable/ic_magnify"/>
 
-        <AutoCompleteTextView
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_toRightOf="@+id/ic_magnify"
             android:layout_centerVertical="true"
             android:textSize="15sp"
             android:textColor="#000"
+            android:paddingStart="5dp"
             android:id="@+id/input_search"
             android:background="@null"
+            android:gravity="center_vertical"
             android:hint="Enter Address, City or Zip Code"
             android:imeOptions="actionSearch"/>
 
